@@ -90,6 +90,7 @@ public class Settingsactivity extends Activity {
                 (LayoutInflater)Settingsactivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         final View addView = layoutInflater.inflate(layout_name, null);
+
         final CheckBox cb = (CheckBox) addView.findViewById(R.id.checkBox2);
 
         cb.setText(cls);
