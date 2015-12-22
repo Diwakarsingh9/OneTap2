@@ -108,7 +108,7 @@ public class Settingsactivity extends Activity {
             window.setStatusBarColor(Settingsactivity.this.getResources().getColor(R.color.colorPrimaryDark));
         } else {
             Window window = Settingsactivity.this.getWindow();
-             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+             //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
     }
