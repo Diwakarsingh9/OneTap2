@@ -2,28 +2,47 @@ package com.apporio.onetap;
 
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.location.Location;
 import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.apporio.onetap.R;
 import com.apporio.onetap.checker.ConnectionDetector;
 import com.apporio.onetap.checker.GPStracker;
+import com.apporio.onetap.settergetter.Inner_map_settergetter;
+import com.apporio.onetap.settergetter.Inner_toppings;
+import com.apporio.onetap.settergetter.Map_outer_settergetter;
+import com.apporio.onetap.settergetter.Outter_all_toppings;
+import com.apporio.onetap.singleton.VolleySingleton;
+import com.apporio.onetap.urlapi.Api_s;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdate;
@@ -38,6 +57,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.cache.memory.impl.FIFOLimitedMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -45,9 +66,13 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 public class Mapactivity extends AppCompatActivity {
     public static int distance;
@@ -61,7 +86,7 @@ public class Mapactivity extends AppCompatActivity {
     public static Boolean isInternetPresent = false;
     public static ConnectionDetector cd;
     public static ImageView back;
-    public static Double currentlat, currentlong;
+  public static Double currentlat, currentlong;
     public  static ArrayList<String> name = new ArrayList<String>();
     public  static ArrayList<String[]> latlng = new ArrayList<>();
     public  static  ArrayList<String> latitude = new ArrayList<>();
@@ -73,11 +98,23 @@ public class Mapactivity extends AppCompatActivity {
     private View view;
     private ImageLoader imageLoader;
     private DisplayImageOptions options;
-
+    SharedPreferences prefs;
     public static Context ctc;
     private Marker marker;
 
     private Hashtable<String, String> markers;
+
+
+    public  static StringRequest sr;
+    public  static RequestQueue queue;
+
+    public static List<Inner_map_settergetter> data_list;
+    public static ArrayList<String> restid = new ArrayList<String>();
+    public static ArrayList<String> restname = new ArrayList<String>();
+    public static ArrayList<String> restimage = new ArrayList<String>();
+    public static ArrayList<String> restaddress = new ArrayList<String>();
+    public static ArrayList<String> restlatt = new ArrayList<String>();
+    public static ArrayList<String> restlong = new ArrayList<String>();
 
 
     @Override
@@ -92,21 +129,17 @@ public class Mapactivity extends AppCompatActivity {
         mapView = (MapView)findViewById(R.id.mapgh);
         mapView.onCreate(savedInstanceState);
         back =(ImageView)findViewById(R.id.back);
-        for(int i =0;i<name1.length;i++){
-            name.add(name1[i]);
-            latitude.add(lat2[i]);
-            longitude.add(long2[i]);
-        }
-        //currentlat= gps.getLatitude();
-        //currentlong= gps.getLongitude();
+        currentlat= 26.2806;
+        currentlong= 73.0158;
+//        currentlat= gps.getLatitude();
+//        currentlong= gps.getLongitude();
 
-        currentlat=  28.5755205;
-        currentlong= 77.24195220000001;
+        prefs = PreferenceManager.getDefaultSharedPreferences(Mapactivity.this);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                overridePendingTransition(R.anim.slideoutup,0);
+                overridePendingTransition(R.anim.slideoutup, 0);
                 Mapactivity.this.finish();
             }
         });
@@ -122,8 +155,8 @@ public class Mapactivity extends AppCompatActivity {
                 .showImageForEmptyUri(R.drawable.stub)	//	If Empty image found
                 .cacheInMemory()
                 .cacheOnDisc().bitmapConfig(Bitmap.Config.RGB_565).build();
+        parsing(Mapactivity.this,currentlat+"",currentlong+"");
 
-        getthetracker();
     }
 
     public void getthetracker() {
@@ -138,6 +171,13 @@ public class Mapactivity extends AppCompatActivity {
                     map = mapView.getMap();
                     map.getUiSettings().setMyLocationButtonEnabled(true);
                     map.setMyLocationEnabled(true);
+//                    map.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+//                        @Override
+//                        public void onMyLocationChange(Location location) {
+//                            currentlat=  location.getLatitude();
+//                            currentlong= location.getLongitude();
+//                        }
+//                    });
                     gps = new GPStracker(ctc, map);
                     CameraUpdate center =
                             CameraUpdateFactory.newLatLng(new LatLng(currentlat,
@@ -146,20 +186,20 @@ public class Mapactivity extends AppCompatActivity {
 
                     map.moveCamera(center);
                     map.animateCamera(zoom);
-                    map.addCircle(new CircleOptions().center(new LatLng(currentlat,
-                            currentlong)).radius(5 * 1000 * 1.2).strokeColor(Color.RED).strokeWidth(4));
+//                    map.addCircle(new CircleOptions().center(new LatLng(currentlat,
+//                            currentlong)).radius(5 * 1000 * 1.2).strokeColor(Color.RED).strokeWidth(4));
 
-                    for (int k = 0; k < name.size(); k++) {
+                    for (int k = 0; k < restname.size(); k++) {
                         //Bitmap bmp = tc.makeIcon(""+ name.get(k));
                         map.setInfoWindowAdapter(new CustomInfoWindowAdapter());
                         now = map.addMarker(new MarkerOptions()
-                                .position(new LatLng(Double.parseDouble((latitude.get(k)).toString()), Double.parseDouble((longitude.get(k)).toString())))
-                                .title("Restro" + name.get(k)).icon(BitmapDescriptorFactory.fromResource(R.drawable.markerrestro)));
+                                .position(new LatLng(Double.parseDouble((restlatt.get(k)).toString()), Double.parseDouble((restlong.get(k)).toString())))
+                                .title("" + restname.get(k)).icon(BitmapDescriptorFactory.fromResource(R.drawable.markerrestro)));
                         map.setMyLocationEnabled(true);
-                        String[] parts = now.getId().split("m");
-                        String part1 = parts[1];
-                        //Toast.makeText(getApplicationContext(),""+part1,Toast.LENGTH_SHORT).show();
-                        markers.put(now.getId(), "http://www.touristtiger.com/wp-content/uploads/2013/06/Famous-Places-in-Italy-Spaghetti.png");
+//                        String[] parts = now.getId().split("m");
+//                        String part1 = parts[1];
+                       // Toast.makeText(getApplicationContext(),""+k+"  "+restimage.get(k),Toast.LENGTH_SHORT).show();
+                        markers.put(now.getId(), "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/"+restimage.get(k));
                         map.setInfoWindowAdapter(new CustomInfoWindowAdapter());
 
                         // now.showInfoWindow();
@@ -198,42 +238,7 @@ public class Mapactivity extends AppCompatActivity {
 
 
     }
-    public void animateMarker(final Marker marker, final LatLng toPosition,
-                              final boolean hideMarker) {
-        final Handler handler = new Handler();
-        final long start = SystemClock.uptimeMillis();
-        Projection proj = map.getProjection();
-        Point startPoint = proj.toScreenLocation(marker.getPosition());
-        final LatLng startLatLng = proj.fromScreenLocation(startPoint);
-        final long duration = 500;
 
-        final Interpolator interpolator = new LinearInterpolator();
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                long elapsed = SystemClock.uptimeMillis() - start;
-                float t = interpolator.getInterpolation((float) elapsed
-                        / duration);
-                double lng = t * toPosition.longitude + (1 - t)
-                        * startLatLng.longitude;
-                double lat = t * toPosition.latitude + (1 - t)
-                        * startLatLng.latitude;
-                marker.setPosition(new LatLng(lat, lng));
-
-                if (t < 1.0) {
-                    // Post again 16ms later.
-                    handler.postDelayed(this, 16);
-                } else {
-                    if (hideMarker) {
-                        marker.setVisible(false);
-                    } else {
-                        marker.setVisible(true);
-                    }
-                }
-            }
-        });
-    }
     @Override
     public void onResume() {
         //Toast.makeText(getActivity(), "resume", Toast.LENGTH_SHORT).show();
@@ -271,6 +276,9 @@ public class Mapactivity extends AppCompatActivity {
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
     }
+
+
+
     private class CustomInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
 
         private View view;
@@ -318,7 +326,12 @@ public class Mapactivity extends AppCompatActivity {
                             }
                         });
             } else {
-                image.setImageResource(R.drawable.men);
+                Picasso.with(Mapactivity.this)
+                        .load("http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/" + prefs.getString("image", null))
+                        .placeholder(R.drawable.download) // optional
+                        .error(R.drawable.download)         // optional
+                        .into(image);
+               // image.setImageResource(R.drawable.men);
             }
 
             final String title = marker.getTitle();
@@ -341,6 +354,8 @@ public class Mapactivity extends AppCompatActivity {
             return view;
         }
     }
+
+
 
     private void initImageLoader() {
         int memoryCacheSize;
@@ -366,4 +381,92 @@ public class Mapactivity extends AppCompatActivity {
         ImageLoader.getInstance().init(config);
     }
 
+
+
+
+    public void parsing(final Context c,String s1, String s2) {
+        final ProgressDialog pd = new ProgressDialog(c);
+        pd.setMessage("Loading ...");
+
+        queue = VolleySingleton.getInstance(c).getRequestQueue();
+        //   Toast.makeText(getActivity(),"id"+CategoryId,Toast.LENGTH_SHORT).show();
+        String urlforRest_food  = Api_s.all_rest_on_maps.concat(s1).concat("&cr_long=").concat(s2);
+        urlforRest_food= urlforRest_food.replace(" ","%20");
+        Log.e("bahjd", "" + urlforRest_food);
+        sr = new StringRequest(Request.Method.POST, urlforRest_food, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.e("Sucess", "" + response);
+                //  Toast.makeText(LoginCleanline.this , ""+response ,Toast.LENGTH_SHORT).show();
+                pd.dismiss();
+                try {
+                    GsonBuilder gsonBuilder = new GsonBuilder();
+                    final Gson gson = gsonBuilder.create();
+
+                    restid.clear();
+                    restname.clear();
+                    restimage.clear();
+                    restaddress.clear();
+                    restlatt.clear();
+                    restlong.clear();
+
+
+                    Map_outer_settergetter received2 = new Map_outer_settergetter();
+                    received2 = gson.fromJson(response, Map_outer_settergetter.class);
+
+                    if (received2.result.equals("1")) {
+                        data_list=received2.inner_map_settergetter;
+
+                        for (int i = 0; i < data_list.size(); i++)
+                        {
+                            restid.add(data_list.get(i).restraurant_ids);
+                            restname.add(data_list.get(i).restraurant_name);
+                            restimage.add(data_list.get(i).imagess);
+                            restaddress.add(data_list.get(i).address);
+                            restlatt.add(data_list.get(i).latt);
+                            restlong.add(data_list.get(i).longg);
+                        }
+                        Log.e("rest_name", "" + restname);
+                        getthetracker();
+
+                    } else {
+
+
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //pDialog.dismiss();
+                Log.e("Sucess", "" + error.toString());
+                // Toast.makeText(getActivity(), "Please enter the email and password", Toast.LENGTH_SHORT).show();
+
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<String, String>();
+
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Content-Type", "application/x-www-form-urlencoded");
+                return params;
+            }
+        };
+        sr.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        queue.add(sr);
+      pd.show();
+    }
 }

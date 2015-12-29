@@ -115,7 +115,7 @@ public class parsingforsignup {
                         edit22.commit();
 
                         Toast.makeText(activity, "Signed Up...", Toast.LENGTH_SHORT).show();
-
+                        parsing_for_settings.parsing(activity, "loginscrn");
                         Intent in = new Intent(activity, MainActivity.class);
                         activity.startActivity(in);
                         Loginscreenactivity.log.finish();

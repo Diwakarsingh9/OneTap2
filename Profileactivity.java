@@ -68,7 +68,7 @@ public class Profileactivity extends Activity {
     public  static TextView save,nameuser;
     public static EditText fname,lname,mob,email,add1,add11,add111,add2,add22,add222;
     public static Spinner sp22;
-    public static ImageView camera,remove_picture,dp,back,imgadd1,imgadd2,menimage;
+    public static ImageView camera,remove_picture,dp,back,imgadd1,imgadd2;
     public static CheckBox ch1,ch2;
     private static final String[] m_Codes = { "376",            "971",
             "93",            "355",            "374",            "599",            "244",            "672",            "54",            "43",            "61",            "297",
@@ -196,13 +196,13 @@ public class Profileactivity extends Activity {
         dp=(ImageView)findViewById(R.id.circleView);
         back =(ImageView)findViewById(R.id.back);
         save =(TextView)findViewById(R.id.save);
-        menimage =(ImageView)findViewById(R.id.circleView);
+       // menimage =(ImageView)findViewById(R.id.circleView);
         nameuser =(TextView)findViewById(R.id.name);
         Picasso.with(Profileactivity.this)
                 .load("http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/" + prefs.getString("image", null))
                 .placeholder(R.drawable.download) // optional
                 .error(R.drawable.download)         // optional
-                .into(menimage);
+                .into(dp);
         nameuser.setText(""+prefs.getString("fname", null)+" "+prefs.getString("lname", null));
         remove_picture=(ImageView)findViewById(R.id.remvepic);
         ArrayAdapter adp = new ArrayAdapter(getApplicationContext(),R.layout.itemlayoutformobile2,R.id.mobcode,m_Codes);

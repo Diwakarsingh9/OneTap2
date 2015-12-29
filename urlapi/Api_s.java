@@ -19,12 +19,12 @@ public class Api_s {
     public  static  String view_favourites = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_favorite.php?user_id=";
     public  static  String view_orders = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_order.php?user_id=";
    // public  static  String nearby = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_order.php?user_id=";
-   public  static  String all_locations = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_location.php";
+   public  static  String all_locations = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_location.php?city_id=";
     public  static  String all_view_category = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_food_category.php";
     public  static  String all_products = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_product_list.php";
     public  static  String all_toppings = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_topping.php";
     public  static  String all_cities = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_city.php";
-
+    public  static  String all_rest_on_maps = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/near_restraurant.php?cr_lat=";
 
 
 }

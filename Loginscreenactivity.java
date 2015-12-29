@@ -26,6 +26,7 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import com.apporio.onetap.R;
+import com.apporio.onetap.parsing.parsing_for_settings;
 import com.apporio.onetap.parsing.parsingforlogin;
 import com.apporio.onetap.parsing.parsingforsignup;
 
@@ -373,11 +374,11 @@ public class Loginscreenactivity extends Activity {
                             passalert.setVisibility(View.VISIBLE);
                         } else {
                             passalert.setVisibility(View.GONE);
-                            parsingforsignup.parsing(Loginscreenactivity.this,fname.getText().toString().trim(),
+                            parsingforsignup.parsing(Loginscreenactivity.this, fname.getText().toString().trim(),
                                     lname.getText().toString().trim(),
                                     username.getText().toString().trim(),
                                     password.getText().toString().trim(),
-                                   mob.getText().toString().trim(),sp22.getSelectedItem().toString().trim());
+                                    mob.getText().toString().trim(), sp22.getSelectedItem().toString().trim());
 
 //                            sp22.getSelectedItem().toString().trim()+
                         }

@@ -2,6 +2,8 @@ package com.apporio.onetap.parsing;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
@@ -29,8 +31,10 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by saifi45 on 12/22/2015.
@@ -40,14 +44,19 @@ public class parsing_for_settings {
     public  static StringRequest sr;
     public  static RequestQueue queue;
     public static String Rest_id;
+    public static  ArrayList<String> myArrayList=new ArrayList<String>();
+
+
+    public static SharedPreferences prefs2;
     public static List<Inner_all_cities> city_names = new ArrayList<>();
     public static ArrayList<String> cityname = new ArrayList<String>();
+    public static ArrayList<String> interested = new ArrayList<String>();
     public static ArrayList<String> cityid = new ArrayList<String>();
 
-    public static void parsing(final Context c) {
+    public static void parsing(final Context c, final String diff) {
         final ProgressDialog pd = new ProgressDialog(c);
         pd.setMessage("Loading ...");
-
+         prefs2 = PreferenceManager.getDefaultSharedPreferences(c);
         queue = VolleySingleton.getInstance(c).getRequestQueue();
         //   Toast.makeText(getActivity(),"id"+CategoryId,Toast.LENGTH_SHORT).show();
         String urlforRest_food  = Api_s.all_cities;
@@ -56,6 +65,8 @@ public class parsing_for_settings {
         sr = new StringRequest(Request.Method.POST, urlforRest_food, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                cityid.clear();
+                cityname.clear();
                 Log.e("Sucess", "" + response);
                 //  Toast.makeText(LoginCleanline.this , ""+response ,Toast.LENGTH_SHORT).show();
                 pd.dismiss();
@@ -78,9 +89,29 @@ public class parsing_for_settings {
                             cityid.add(city_names.get(i).city_id);
                             cityname.add(city_names.get(i).city);
                         }
-                        Settingsactivity.adp = new ArrayAdapter(c, R.layout.itemforfilter,R.id.textView39,cityname);
-                        Settingsactivity.sp.setAdapter(Settingsactivity.adp);
+                        if(diff.equals("settings")) {
+                            Settingsactivity.adp = new ArrayAdapter(c, R.layout.itemforfilter, R.id.textView39, cityname);
+                            Settingsactivity.sp.setAdapter(Settingsactivity.adp);
+                            Settingsactivity.sp.setSelection(Integer.parseInt(prefs2.getString("category_id11","0")));
+                        }
+                        else {
+                            SharedPreferences.Editor edit22 = prefs2.edit();
+                            myArrayList.add("");
+                            myArrayList.add("");
+                            myArrayList.add("");
+                            myArrayList.add("");
 
+                            edit22.putString("category_id", "" + cityid.get(0));
+                            edit22.putString("distance", "50");
+                            for(int i=0;i<myArrayList.size();i++)
+                            {
+                                edit22.putString("interested"+i, myArrayList.get(i));
+
+                            }
+                            edit22.putInt("size",myArrayList.size());
+
+                            edit22.commit();
+                        }
 
                     } else {
 

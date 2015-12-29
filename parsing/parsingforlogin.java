@@ -118,7 +118,7 @@ public class parsingforlogin {
                         edit22.putBoolean("pref_previously_started", Boolean.TRUE);
                         edit22.commit();
 
-
+                        parsing_for_settings.parsing(activity, "loginscrn");
                         Intent in = new Intent(activity, MainActivity.class);
                         activity.startActivity(in);
                         Loginscreenactivity.log.finish();
