@@ -3,18 +3,15 @@ package com.apporio.onetap;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
-import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,13 +22,22 @@ import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.apporio.onetap.parsing.parsing_for_fooddetails;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.apporio.onetap.parsing.parsingfordofav;
 import com.apporio.onetap.parsing.parsingforratingadd;
+import com.apporio.onetap.settergetter.Inner_add_ons;
+import com.apporio.onetap.settergetter.Inner_fooddetails;
+import com.apporio.onetap.settergetter.Inner_rating;
+import com.apporio.onetap.settergetter.Outer_fooddetails;
+import com.apporio.onetap.singleton.VolleySingleton;
+import com.apporio.onetap.urlapi.Api_s;
 import com.github.mikephil.charting.charts.HorizontalBarChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -42,17 +48,49 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.nirhart.parallaxscroll.views.ParallaxScrollView;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import views.CustomRatingBar;
 import views.textview.CustomRatingBarGreen;
 
 public class Foodinneractivity extends Activity implements OnChartValueSelectedListener {
+
+    public static RequestQueue queue;
+    public static StringRequest sr2;
+    public static Inner_fooddetails data_list1;
+    public static Inner_rating data_list_rating;
+    public static String rest_id ;
+    public static String product_id ;
+    public static String food_type;
+    public static String food_name ;
+    public static String delivry_time;
+    public static String images ;
+    public static String description ;
+    public static String rating;
+    public static String favourite ;
+    public static String food_price ;
+    public static String rest_images ;
+    public static String no_of_rating_person ;
+    public static List<Inner_add_ons> addons ;
+    public static String rating1 ;
+    public static String rating2;
+    public static String rating3 ;
+    public static String rating4 ;
+    public static String rating5 ;
+    public static ArrayList<String> toppingid = new ArrayList<String>();
+    public static ArrayList<String> toppingname = new ArrayList<String>();
+    public static ArrayList<String> rating_nos = new ArrayList<String>();
+
+    ////////////////////////////////////////////
     public  static  HorizontalBarChart mChart;
     public  static LinearLayout ll22;
-    public  static TextView foodname,foodtype,price,ratingtext,descp;
+    public  static TextView foodname,foodtype,price,ratingtext,descp,no_of_person_rated;
     public  static String[] y={"1","2","3","4","5"};
     float f = (float) 14.90;
     String sd;
@@ -62,7 +100,7 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
     public  static String []cb={"Extra Cheese","Topping:Black Olivers","Topping:White Paprika","White Thin Crust"};
     public  static LinearLayout ll;
     public  static ParallaxScrollView ps;
-    public  static ImageView img,back,imghrtred,imghrtwyt,location,cartwyt,foodimage;
+    public  static ImageView img,back,imghrtred,imghrtwyt,location,cartwyt,foodimage,rest_image;
     public  static CustomRatingBarGreen rb;
     public  static CustomRatingBar rbred;
     @Override
@@ -78,12 +116,14 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
         back = (ImageView) findViewById(R.id.back);
         cartwyt = (ImageView) findViewById(R.id.cartwyt);
         foodimage = (ImageView) findViewById(R.id.foodimage);
+        rest_image = (ImageView) findViewById(R.id.imageView11);
         imghrtred = (ImageView) findViewById(R.id.imgheartred);
         imghrtwyt = (ImageView) findViewById(R.id.imgheartwhite);
         location = (ImageView) findViewById(R.id.locat);
         foodname = (TextView) findViewById(R.id.foodname);
         foodtype = (TextView) findViewById(R.id.foodtype);
         ratingtext = (TextView) findViewById(R.id.ratingtext);
+        no_of_person_rated = (TextView) findViewById(R.id.textView13);
         descp = (TextView) findViewById(R.id.descption);
         Bundle b = getIntent().getExtras();
         final String pro_id= b.getString("product_id", null);
@@ -93,7 +133,7 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
         ll22 = (LinearLayout) findViewById(R.id.ll22);
         ll22.setFocusable(false);
         ll22.setClickable(false);
-        parsing_for_fooddetails.parsing(Foodinneractivity.this,pro_id);
+        parsing(Foodinneractivity.this, pro_id);
 
 
         imghrtred.setOnClickListener(new View.OnClickListener() {
@@ -114,6 +154,7 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
                 imghrtred.setVisibility(View.VISIBLE);
                 imghrtwyt.setVisibility(View.GONE);
                 fav="0";
+
             }
         });
 
@@ -229,7 +270,7 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
         yr.setDrawGridLines(false);
         yr.setInverted(false);
 
-        setData(5, 50);
+        //setData(5, 50, rating_nos);
         mChart.animateY(2500);
 
         // setting data
@@ -247,7 +288,7 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
         mChart.setBackgroundColor(Color.parseColor("#ffffff"));
 
     }
-    private void setData(int count, int range) {
+    public  void setData(int count, int range, ArrayList<String> rating_nos) {
 
         ArrayList<BarEntry> yVals1 = new ArrayList<>();
         ArrayList<String> xVals = new ArrayList<String>();
@@ -256,7 +297,7 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
 
             xVals.add(y[i]);
 
-            yVals1.add(new BarEntry((x[i]), i));
+            yVals1.add(new BarEntry(Integer.parseInt((rating_nos.get(i))), i));
             //Toast.makeText(Foodinneractivity.this, ""+new BarEntry(x[i],i), Toast.LENGTH_SHORT).show();
 
 
@@ -329,5 +370,141 @@ public class Foodinneractivity extends Activity implements OnChartValueSelectedL
            // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
+    }
+
+
+    public void parsing(final Context activity, String s1) {
+        final ProgressDialog pd = new ProgressDialog(activity);
+        pd.setMessage("loading");
+
+
+        queue = VolleySingleton.getInstance(activity).getRequestQueue();
+
+
+        String locationurl2 = Api_s.product_info.concat(s1);
+        locationurl2 = locationurl2.replace(" ", "%20");
+        // locationurl2 = locationurl2.replace("VIDEOS","VIDEO");
+        Log.e("url", "" + locationurl2);
+
+        sr2 = new StringRequest(Request.Method.GET, locationurl2, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+//
+
+
+                pd.dismiss();
+//                Videoactivity.pb.setVisibility(View.GONE);
+//                Videoactivity.llforlist.setVisibility(View.VISIBLE);
+
+                try {
+                    GsonBuilder gsonBuilder = new GsonBuilder();
+                    final Gson gson = gsonBuilder.create();
+                    Outer_fooddetails received2 = new Outer_fooddetails();
+                    received2 = gson.fromJson(response, Outer_fooddetails.class);
+
+                    String result = received2.result;
+                    if(result.equals("0")){
+//                        Videoactivity.relatedsearch.setVisibility(View.GONE);
+//                        Videoactivity.v111.setVisibility(View.GONE);
+                    }
+                    else {
+
+                        data_list1=received2.inner_fooddetails;
+
+                        rest_id=(data_list1.restraurant_id);
+                        product_id=(data_list1.product_id);
+                        food_type=(data_list1.food_type);
+                        food_name=(data_list1.food_name);
+                        delivry_time=(data_list1.deliver_time);
+                        rest_images=(data_list1.restraurant_image);
+                        no_of_rating_person=(data_list1.no_of_ret_pers);
+                        images=(data_list1.image);
+                        food_price=(data_list1.price);
+                        description=(data_list1.description);
+                        rating=(data_list1.rating);
+                        favourite=(data_list1.favorite);
+                        rating1=(data_list1.inner_rating.rating_1);
+                        rating2=(data_list1.inner_rating.rating_2);
+                        rating3=(data_list1.inner_rating.rating_3);
+                        rating4=(data_list1.inner_rating.rating_4);
+                        rating5=(data_list1.inner_rating.rating_5);
+                        addons=data_list1.add_on;
+                        Log.e("sizeaddon", addons.size() + "");
+                        for(int i=0;i<addons.size();i++) {
+                            toppingname.add(addons.get(i).topping);
+                            toppingid.add(addons.get(i).topping_id);
+
+                        }
+                       rating_nos.add(rating1);
+                        rating_nos.add(rating2);
+                        rating_nos.add(rating3);
+                        rating_nos.add(rating4);
+                        rating_nos.add(rating5);
+                        Foodinneractivity.foodname.setText(""+food_name);
+                        Foodinneractivity.foodtype.setText(""+food_type);
+                        Foodinneractivity.descp.setText(""+description);
+                        Foodinneractivity.ratingtext.setText("" + rating);
+                        Foodinneractivity.price.setText("" + food_price);
+                        Foodinneractivity.no_of_person_rated.setText("" + no_of_rating_person);
+                        Picasso.with(activity)
+                                .load("http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/" + images)
+                                .placeholder(R.drawable.logo) // optional
+                                .error(R.drawable.logo)         // optional
+                                .into(Foodinneractivity.foodimage);
+                        Picasso.with(activity)
+                                .load("http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/" + rest_images)
+                                .placeholder(R.drawable.logo) // optional
+                                .error(R.drawable.logo)         // optional
+                                .into(Foodinneractivity.rest_image);
+                        setData(5,50,rating_nos);
+                        if(rating.toString().trim().equals("0")){
+
+                        }
+                        else {
+                            Foodinneractivity.rbred.setScore(Float.parseFloat(rating+""));
+                        }
+
+
+
+                        if(favourite.equals("0")){
+                            Foodinneractivity.fav="0";
+                            Foodinneractivity.imghrtwyt.setVisibility(View.VISIBLE);
+                            Foodinneractivity.imghrtred.setVisibility(View.GONE);
+                        }
+                        else {
+                            Foodinneractivity.fav="1";
+                            Foodinneractivity.imghrtwyt.setVisibility(View.GONE);
+                            Foodinneractivity.imghrtred.setVisibility(View.VISIBLE);
+                        }
+
+                        for(int i=0;i<addons.size();i++){
+
+                            Foodinneractivity.ll.addView(Foodinneractivity.ordersview(activity, R.layout.layoutforcb, toppingname.get(i)));
+                        }
+
+                    }
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e("exception", "" + e);
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        sr2.setRetryPolicy(new DefaultRetryPolicy(50000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        queue.add(sr2);
+        pd.show();
+//        Videoactivity.pb.setVisibility(View.VISIBLE);
+//        Videoactivity.llforlist.setVisibility(View.GONE);
+
     }
 }

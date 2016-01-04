@@ -58,6 +58,8 @@ import com.apporio.onetap.singleton.VolleySingleton;
 import com.apporio.onetap.urlapi.Api_s;
 import com.apporio.onetap.viewpagertransformer.ZoomOutPageTransformer;
 import com.astuetz.PagerSlidingTabStrip;
+import com.facebook.AccessToken;
+import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -151,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
        nameuser.setText("Hi " + prefs.getString("fname", null) + ",");
         NAME=prefs.getString("fname",null)+" "+prefs.getString("lname",null);
         EMAIL=prefs.getString("email", null);
-       PROFILE= prefs.getString("image", null);
+       PROFILE= prefs.getString("image", "");
+
         toolbar.setTitle(" ");
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.menu);
@@ -480,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        MyAdapter(MainActivity mainActivity, String Titles[], int Icons[], String Name, String Email, String Profile){ // MyAdapter Constructor with titles and icons parameter
+        public MyAdapter(MainActivity mainActivity, String Titles[], int Icons[], String Name, String Email, String Profile){ // MyAdapter Constructor with titles and icons parameter
             // titles, icons, name, email, profile pic are passed from the main activity as we
             mNavTitles = Titles;                //have seen earlier
             mIcons = Icons;
@@ -658,13 +661,14 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor edit2 = prefs.edit();
                 edit2.putBoolean("pref_previously_started", Boolean.FALSE);
                 edit2.commit();
+                AccessToken accessToken = AccessToken.getCurrentAccessToken();
+
+                    LoginManager.getInstance().logOut();
+
                 Intent in = new Intent(MainActivity.this,Loginscreenactivity.class);
                 startActivity(in);
                 MainActivity.this.finish();
                 dialog.dismiss();
-
-
-
             }
         });
 

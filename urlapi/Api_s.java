@@ -11,6 +11,7 @@ public class Api_s {
     public  static  String food_names = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_product.php?restraurant_id=";
     public  static  String login = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/login.php?email=";
     public  static  String Edit_User_Profile = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/edit_profile.php?user_id=";
+    public  static  String fblogin = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/fb_login.php?fname=";
 
     public  static  String frgtpasswrd = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/forgot_pass.php?email=";
     public  static  String ratingadd = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/add_rating.php?user_id=";
@@ -25,6 +26,7 @@ public class Api_s {
     public  static  String all_toppings = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_topping.php";
     public  static  String all_cities = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/view_city.php";
     public  static  String all_rest_on_maps = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/near_restraurant.php?cr_lat=";
+    public  static  String uploadphoto = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/api/edit_user_photo.php";
 
 
 }

@@ -16,6 +16,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.apporio.onetap.Loginscreenactivity;
 import com.apporio.onetap.MainActivity;
+import com.apporio.onetap.Profileactivity;
 import com.apporio.onetap.settergetter.Inner_login;
 import com.apporio.onetap.settergetter.Outer_Signup;
 import com.apporio.onetap.settergetter.Outer_login;

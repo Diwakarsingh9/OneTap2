@@ -19,6 +19,7 @@ import com.apporio.onetap.MainActivity;
 import com.apporio.onetap.settergetter.Inner_Restaurant_id;
 import com.apporio.onetap.settergetter.Inner_login;
 import com.apporio.onetap.settergetter.Outer_login;
+import com.apporio.onetap.settergetter.Outerfbloginsettergetter;
 import com.apporio.onetap.settergetter.Restaurant_id_outer;
 import com.apporio.onetap.singleton.VolleySingleton;
 import com.apporio.onetap.urlapi.Api_s;
@@ -146,6 +147,116 @@ public class parsingforlogin {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(sr2);
        pd.show();
+
+
+    }
+
+    public static void facebookparsing(final Context activity,String s1, String s2,String s3, String s4, String s5) {
+        final ProgressDialog pd = new ProgressDialog(activity);
+        pd.setMessage("Logging in ...");
+        ctc22 = activity;
+
+        queue = VolleySingleton.getInstance(activity).getRequestQueue();
+
+
+        String locationurl2 = Api_s.fblogin.concat(s1).concat("&lname=").concat(s2).concat("&email=").concat(s3)
+        .concat("&facebook_id=").concat(s4).concat("&mobile_number=").concat(s5);
+        locationurl2 = locationurl2.replace(" ", "%20");
+
+        Log.e("url", "" + locationurl2);
+
+        sr2 = new StringRequest(Request.Method.GET, locationurl2, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+//
+
+                pd.dismiss();
+
+                SharedPreferences prefs2 = PreferenceManager.getDefaultSharedPreferences(activity);
+                try {
+                    GsonBuilder gsonBuilder = new GsonBuilder();
+                    final Gson gson = gsonBuilder.create();
+                    Outerfbloginsettergetter received2 = new Outerfbloginsettergetter();
+                    received2 = gson.fromJson(response, Outerfbloginsettergetter.class);
+
+                    String result = received2.result;
+                    if(result.equals("0")){
+//
+                        Toast.makeText(ctc22, ""+received2.msg, Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+
+                        data_list1=received2.details;
+                        String fname11 =received2.details.fname;
+                        String lname11 = received2.details.lname;
+                        String emailid = received2.details.email;
+                        String user_id =received2.details.user_id;
+                        String phone_no = received2.details.mobile_number;
+                        String address1 =received2.details.address1 ;
+                        String address2 = received2.details.address22;
+                        String primary =received2.details.primaryy ;
+                        String latitude = received2.details.latt;
+                        String longitude =received2.details.long22;
+                        String image = received2.details.images;
+                        String fb_id = received2.details.facebook_id;
+
+
+
+                        //Toast.makeText(activity, ""+name11, Toast.LENGTH_SHORT).show();
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+                        SharedPreferences.Editor edit2 = prefs.edit();
+
+                        edit2.putBoolean("pref_previously_started", Boolean.TRUE);
+                        edit2.putString("fname", "" + fname11);
+                        edit2.putString("lname", "" + lname11);
+                        edit2.putString("email", "" + emailid);
+                        edit2.putString("user_id", "" +user_id);
+                        edit2.putString("phone_no", "" + phone_no);
+                        edit2.putString("address1", "" +address1);
+                        edit2.putString("address2", "" + address2);
+                        edit2.putString("primary", "" +primary);
+                        edit2.putString("latitude", "" + latitude);
+                        edit2.putString("longitude", "" +longitude);
+                        edit2.putString("image", "" + image);
+                        edit2.putString("fb_id", "" + fb_id);
+
+                        edit2.commit();
+
+
+                        SharedPreferences.Editor edit22 = prefs2.edit();
+
+                        edit22.putBoolean("pref_previously_started", Boolean.TRUE);
+                        edit22.commit();
+
+                        parsing_for_settings.parsing(activity, "loginscrn");
+                        Intent in = new Intent(activity, MainActivity.class);
+                        activity.startActivity(in);
+                        Loginscreenactivity.log.finish();
+                        Log.e("details",""+data_list1.fname+" "+data_list1.lname);
+
+
+
+                    }
+
+
+
+                } catch (JsonSyntaxException e) {
+                    e.printStackTrace();
+                    Log.e("exception", "" + e);
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+            }
+        });
+        sr2.setRetryPolicy(new DefaultRetryPolicy(50000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        queue.add(sr2);
+        pd.show();
 
 
     }

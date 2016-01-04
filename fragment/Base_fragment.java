@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -19,6 +20,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.apporio.onetap.R;
 import com.apporio.onetap.adapter.Mainlistviewadapter;
 import com.apporio.onetap.DBManager;
+import com.apporio.onetap.settergetter.Inner_toppings;
 import com.apporio.onetap.settergetter.Innerproductnames;
 import com.apporio.onetap.settergetter.NO_Data_Setter;
 import com.apporio.onetap.settergetter.Product_setter_getter;
@@ -47,6 +49,7 @@ public class Base_fragment extends Fragment {
     public  static RequestQueue queue;
     public static String Rest_id;
     List<Innerproductnames> product_names = new ArrayList<>();
+    List<Inner_toppings> toppingssss = new ArrayList<>();
     ArrayList<String> product_id = new ArrayList<String>();
     ArrayList<String>   rest_id = new ArrayList<String>();
     ArrayList<String>   food_type = new ArrayList<String>();
@@ -54,7 +57,12 @@ public class Base_fragment extends Fragment {
     ArrayList<String>   food_name = new ArrayList<String>();
     ArrayList<String>   food_image= new ArrayList<String>();
     ArrayList<String>   food_rating= new ArrayList<String>();
+    ArrayList<String>   toppingprice= new ArrayList<String>();
+    ArrayList<String>   toppingid= new ArrayList<String>();
+    ArrayList<String>   toppingname= new ArrayList<String>();
     ArrayList<String>   no_of_units= new ArrayList<String>();
+    ArrayList<String[]> toppingnameArray= new ArrayList<>();
+    ArrayList<String[]> toppingidarray= new ArrayList<>();
     DBManager dbm ;
 
         @Override
@@ -127,15 +135,20 @@ public class Base_fragment extends Fragment {
 
                 GsonBuilder gsonBuilder = new GsonBuilder();
                 final Gson gson = gsonBuilder.create();
-
+                toppingssss.clear();
                 product_id.clear();
                 rest_id.clear();
                 food_image.clear();
-
+                toppingprice.clear();
                 food_name.clear();
                 food_price.clear();
                 food_rating.clear();
                 food_type.clear();
+                toppingidarray.clear();
+                toppingnameArray.clear();
+                toppingid.clear();
+                toppingname.clear();
+
 
                 NO_Data_Setter received2 = new NO_Data_Setter();
                 received2 = gson.fromJson(response, NO_Data_Setter.class);
@@ -152,13 +165,28 @@ public class Base_fragment extends Fragment {
                         food_rating.add(product_names.get(i).rating);
                         food_price.add(product_names.get(i).price);
                         food_image.add(product_names.get(i).images);
+                        toppingprice.add(product_names.get(i).topping_price);
+                        toppingssss=product_names.get(i).toppingsss;
+                        for(int j=0;j<toppingssss.size();j++){
+                            toppingid.add(toppingssss.get(j).topping_id);
+                            toppingname.add(toppingssss.get(j).topping);
+                        }
+                        String[] topname = new String[toppingid.size()];
+                        topname = toppingid.toArray(topname);
+                        String[] topid = new String[toppingname.size()];
+                        topid = toppingname.toArray(topid);
+                        toppingidarray.add(topid);
+                        toppingnameArray.add(topname);
                         no_of_units.add("0");
+                        toppingid.clear();
+                        toppingname.clear();
+                       // Toast.makeText(getActivity(), "" + toppingnameArray.get(i).toString(), Toast.LENGTH_SHORT).show();
 
 
                     }
 
                         lv.setAdapter(new Mainlistviewadapter(getActivity(), product_id, rest_id,
-                                food_name, food_type, food_rating, food_price,food_image,no_of_units));
+                                food_name, food_type, food_rating, food_price,food_image,no_of_units,toppingnameArray,toppingidarray));
 
                 } else {
                     //Toast.makeText(getActivity(), "Please enter correct details", Toast.LENGTH_SHORT).show();

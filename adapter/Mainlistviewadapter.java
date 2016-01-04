@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.apporio.onetap.Foodinneractivity;
@@ -17,6 +18,7 @@ import com.apporio.onetap.DBManager;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import views.CustomRatingBar;
 
@@ -25,7 +27,8 @@ import views.CustomRatingBar;
  */
 public class Mainlistviewadapter extends BaseAdapter {
     Context ctc;
-
+    public  static ArrayList<String[]> toppingidarray= new ArrayList<>();
+    public static ArrayList<String[]> toppingnamearray = new ArrayList<>();
     ArrayList<String> product_id = new ArrayList<String>();
     ArrayList<String>   rest_id = new ArrayList<String>();
     ArrayList<String>   food_type = new ArrayList<String>();
@@ -36,12 +39,11 @@ public class Mainlistviewadapter extends BaseAdapter {
     DBManager dbm;
     ArrayList<String>   no_of_units= new ArrayList<String>();
     int value;
-    public  static ArrayList<String> novaluess;
-    public static ArrayList<ArrayList<String>> novaluemain22 = new ArrayList<>();
 
 
 
-    public Mainlistviewadapter(FragmentActivity activity, ArrayList<String> product_id, ArrayList<String> rest_id, ArrayList<String> food_name, ArrayList<String> food_type, ArrayList<String> food_rating, ArrayList<String> food_price, ArrayList<String> food_image, ArrayList<String> no_of_units) {
+
+    public Mainlistviewadapter(FragmentActivity activity, ArrayList<String> product_id, ArrayList<String> rest_id, ArrayList<String> food_name, ArrayList<String> food_type, ArrayList<String> food_rating, ArrayList<String> food_price, ArrayList<String> food_image, ArrayList<String> no_of_units, ArrayList<String[]> toppingnameArray, ArrayList<String[]> toppingidarray) {
         this.ctc=activity;
         this.product_id=product_id;
         this.rest_id=rest_id;
@@ -51,6 +53,8 @@ public class Mainlistviewadapter extends BaseAdapter {
         this.food_image=food_image;
         this.food_rating=food_rating;
         this.no_of_units=no_of_units;
+        this.toppingidarray=toppingidarray;
+        this.toppingnamearray=toppingnameArray;
         dbm = new DBManager(ctc);
 
     }
@@ -87,19 +91,19 @@ public class Mainlistviewadapter extends BaseAdapter {
             viewHolder.ratingBar = (CustomRatingBar) rowView.findViewById(R.id.ratingBar4);
             viewHolder.plusbtn = (ImageView) rowView.findViewById(R.id.plus22);
             viewHolder.minusbtn = (ImageView) rowView.findViewById(R.id.minus22);
-
             rowView.setTag(viewHolder);
+
         }else {
             viewHolder = (ViewHolder)rowView.getTag();
         }
 
 //           viewHolder.imageview.setImageResource(Integer.parseInt(productimages_arr.get(i)));
-        viewHolder.product_name.setText(food_name.get(i));
+        viewHolder.product_name.setText(""+food_name.get(i));
         viewHolder.ratingBar.setScore(Float.parseFloat(food_rating.get(i)));
-        viewHolder.product_price.setText(food_price.get(i));
-        viewHolder.cuisines.setText(food_type.get(i));
-        viewHolder.noofunit_product.setText(dbm.getNoofunitAccordingToProductId(product_id.get(i)));
-        String images = food_image.get(i);
+        viewHolder.product_price.setText(""+food_price.get(i));
+        viewHolder.cuisines.setText(""+food_type.get(i));
+        viewHolder.noofunit_product.setText(""+dbm.getNoofunitAccordingToProductId(product_id.get(i)));
+        String images = ""+food_image.get(i);
         images = "http://www.wscubetechapps.in/mobileteam/OneTapTakeway_app/"+ images.replace("//","/");
 
       //  Log.e("bahjd",""+images);
@@ -121,9 +125,9 @@ public class Mainlistviewadapter extends BaseAdapter {
                 value = Integer.parseInt(finalViewHolder.noofunit_product.getText().toString());
                 finalViewHolder.noofunit_product.setText("" + (value + 1));
                 no_of_units.set(i, "" + (value + 1));
-               // Toast.makeText(ctc, ""+no_of_units, Toast.LENGTH_SHORT).show();
+              // Toast.makeText(ctc, "" + toppingnamearray.get(i), Toast.LENGTH_SHORT).show();
                 dbm.addtocart(product_id.get(i),rest_id.get(i), food_name.get(i), food_type.get(i), food_price.get(i),food_image.get(i),food_rating.get(i),
-                        no_of_units.get(i));
+                        no_of_units.get(i),toppingnamearray.get(i),toppingidarray.get(i));
 
 
             }
@@ -136,32 +140,31 @@ public class Mainlistviewadapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 int value = Integer.parseInt(finalViewHolder.noofunit_product.getText().toString());
-                if(value>0){
-                    if(value == 1){
-                        finalViewHolder.noofunit_product.setText(""+(value - 1));
-                        no_of_units.set(i ,""+(value-1));
-                        // remove it from DB
-                  dbm.removeItemfromDB(product_id.get(i));
-
-                    }if(value >1){
+                if (value > 0) {
+                    if (value == 1) {
                         finalViewHolder.noofunit_product.setText("" + (value - 1));
-                        no_of_units.set(i ,""+(value-1));
+                        no_of_units.set(i, "" + (value - 1));
+                        // remove it from DB
+                        dbm.removeItemfromDB(product_id.get(i));
+
+                    }
+                    if (value > 1) {
+                        finalViewHolder.noofunit_product.setText("" + (value - 1));
+                        no_of_units.set(i, "" + (value - 1));
                         ///edit it into DB
-                        dbm.addtocart(product_id.get(i),rest_id.get(i), food_name.get(i), food_type.get(i), food_price.get(i),food_image.get(i),food_rating.get(i),
-                                no_of_units.get(i));                    }
-                }
-                else {
+                        dbm.addtocart(product_id.get(i), rest_id.get(i), food_name.get(i), food_type.get(i), food_price.get(i), food_image.get(i), food_rating.get(i),
+                                no_of_units.get(i), toppingnamearray.get(i), toppingidarray.get(i));
+                    }
+                } else {
                     //do nothing
                 }
             }
         });
 
 
-        final View finalRowView = rowView;
-        final ViewHolder finalViewHolder1 = viewHolder;
-        final ViewHolder finalViewHolder2 = viewHolder;
-        rowView.setTag(i);
-        rowView.setOnClickListener(new View.OnClickListener() {
+
+        viewHolder.imageview.setTag(i);
+        viewHolder.imageview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int pos= (int) v.getTag();
@@ -172,6 +175,67 @@ public class Mainlistviewadapter extends BaseAdapter {
 
             }
         });
+        viewHolder.product_name.setTag(i);
+        viewHolder.product_name.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos= (int) v.getTag();
+                Intent in = new Intent(ctc, Foodinneractivity.class);
+                in.putExtra("product_id",product_id.get(pos));
+                ctc.startActivity(in);
+
+
+            }
+        });
+        viewHolder.noofunit_product.setTag(i);
+        viewHolder.noofunit_product.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos= (int) v.getTag();
+                Intent in = new Intent(ctc, Foodinneractivity.class);
+                in.putExtra("product_id",product_id.get(pos));
+                ctc.startActivity(in);
+
+
+            }
+        });
+        viewHolder.cuisines.setTag(i);
+        viewHolder.cuisines.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos= (int) v.getTag();
+                Intent in = new Intent(ctc, Foodinneractivity.class);
+                in.putExtra("product_id",product_id.get(pos));
+                ctc.startActivity(in);
+
+
+            }
+        });
+        viewHolder.ratingBar.setTag(i);
+        viewHolder.ratingBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos= (int) v.getTag();
+                Intent in = new Intent(ctc, Foodinneractivity.class);
+                in.putExtra("product_id",product_id.get(pos));
+                ctc.startActivity(in);
+
+
+            }
+        });
+        viewHolder.product_price.setTag(i);
+        viewHolder.product_price.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos= (int) v.getTag();
+                Intent in = new Intent(ctc, Foodinneractivity.class);
+                in.putExtra("product_id",product_id.get(pos));
+                ctc.startActivity(in);
+
+
+            }
+        });
+
 
         return rowView;
     }

@@ -9,6 +9,7 @@ import com.apporio.onetap.database.CartEvent;
 import com.apporio.onetap.database.CheckCart;
 import com.orm.SugarRecord;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.greenrobot.event.EventBus;
@@ -29,27 +30,28 @@ public class DBManager {
     }
 
     public static  void addtocart(String ProductId, String rest_id,
-                                  String food_name, String foodtype, String foodprice, String foodimage, String foodrating, String food_no_of_units){
+                                  String food_name, String foodtype, String foodprice, String foodimage,
+                                  String foodrating, String food_no_of_units, String[] toppingsoffood, String[] toppingsidoffood){
 
         if(new CheckCart().idalreadyExsistinCart(ProductId)){
             ////change already saved details in database
             changeExsistingRowintable(ProductId  , food_no_of_units);
         }else {
             /////  create new row in database
-            createnreRowintable( ProductId, rest_id, food_name, foodtype, foodprice,foodimage,foodrating,food_no_of_units);
+            createnreRowintable( ProductId, rest_id, food_name, foodtype, foodprice,foodimage,foodrating,food_no_of_units,toppingsoffood,toppingsidoffood);
         }
 
     }
 
     private static void createnreRowintable(String ProductId, String rest_id,
-                                            String food_name, String foodtype, String foodprice, String foodimage, String foodrating, String food_no_of_units) {
+                                            String food_name, String foodtype, String foodprice,
+                                            String foodimage, String foodrating, String food_no_of_units, String[] toppingsoffood, String[] toppingsidoffood) {
         Log.e("hfdhg","nounits   ---"+food_no_of_units);
         new CartTable(ProductId,
                 rest_id,
                 food_name,
                 foodtype,
-                foodprice,foodimage,foodrating,food_no_of_units
-        ).save();
+                foodprice,foodimage,foodrating,food_no_of_units,toppingsoffood,toppingsidoffood).save();
 
         updateTotalOnActionBar();
         showdataoncart();

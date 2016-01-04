@@ -7,6 +7,7 @@ package com.apporio.onetap;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -15,6 +16,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -45,7 +47,18 @@ import com.apporio.onetap.directory.AlbumStorageDirFactory;
 import com.apporio.onetap.directory.BaseAlbumDirFactory;
 import com.apporio.onetap.directory.FroyoAlbumDirFactory;
 import com.apporio.onetap.parsing.parsing_for_profile;
+import com.apporio.onetap.urlapi.Api_s;
 import com.squareup.picasso.Picasso;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +73,8 @@ public class Profileactivity extends Activity {
     String primary = "1";
     String laststr = "";
     String laststr2 = "";
-    private String mCurrentPhotoPath;
+    long totalSize =0;
+//    private String mCurrentPhotoPath;
     private AlbumStorageDirFactory mAlbumStorageDirFactory = null;
     private static final String JPEG_FILE_PREFIX = "IMG_";
     private static final String JPEG_FILE_SUFFIX = ".jpg";
@@ -260,11 +274,8 @@ public class Profileactivity extends Activity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                parsing_for_profile.parsing(Profileactivity.this, prefs.getString("user_id", null), fname.getText().toString().trim(), lname.getText().toString().trim(),
-                        mob.getText().toString().trim(),
-                        add1.getText().toString().trim() + " " + add11.getText().toString().trim() + " " + add111.getText().toString().trim(),
-                        add2.getText().toString().trim() + " " + add22.getText().toString().trim() + " " + add222.getText().toString().trim(),
-                        primary,email.getText().toString().trim(),sp22.getSelectedItem().toString().trim());
+                new UploadFileToServer().execute();
+
                 //Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
 //                sp22.getSelectedItem().toString().trim()+
             }
@@ -280,6 +291,8 @@ public class Profileactivity extends Activity {
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
                         dp.setImageResource(R.drawable.download);
+
+                        imgDecodableString="";
                         return true;
                     }
                 });
@@ -345,12 +358,12 @@ public class Profileactivity extends Activity {
 
                 try {
                     f = setUpPhotoFile();
-                    mCurrentPhotoPath = f.getAbsolutePath();
+                    imgDecodableString = f.getAbsolutePath();
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
                 } catch (IOException e) {
                     e.printStackTrace();
                     f = null;
-                    mCurrentPhotoPath = null;
+                    imgDecodableString = null;
                 }
                 break;
 
@@ -362,7 +375,7 @@ public class Profileactivity extends Activity {
     }
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
-        File f = new File(mCurrentPhotoPath);
+        File f = new File(imgDecodableString);
         Uri contentUri = Uri.fromFile(f);
         mediaScanIntent.setData(contentUri);
         Profileactivity.this.sendBroadcast(mediaScanIntent);
@@ -426,11 +439,11 @@ public class Profileactivity extends Activity {
     }
     private void handleBigCameraPhoto() {
 
-        if (mCurrentPhotoPath != null) {
+        if (imgDecodableString != null) {
             galleryAddPic();
             setPic();
 
-            mCurrentPhotoPath = null;
+            imgDecodableString = null;
         }
 
     }
@@ -448,7 +461,7 @@ public class Profileactivity extends Activity {
 		/* Get the size of the image */
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        BitmapFactory.decodeFile(imgDecodableString, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
@@ -464,7 +477,7 @@ public class Profileactivity extends Activity {
         bmOptions.inPurgeable = true;
 
 		/* Decode the JPEG file into a Bitmap */
-        bitmap1 = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+        bitmap1 = BitmapFactory.decodeFile(imgDecodableString, bmOptions);
         Log.e("bitmap", "" + bitmap1);
         dp.setImageBitmap(bitmap1);
 
@@ -508,7 +521,7 @@ public class Profileactivity extends Activity {
     private File setUpPhotoFile() throws IOException {
 
         File f = createImageFile();
-        mCurrentPhotoPath = f.getAbsolutePath();
+        imgDecodableString = f.getAbsolutePath();
 
         return f;
     }
@@ -525,5 +538,104 @@ public class Profileactivity extends Activity {
            // window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
+    }
+
+
+    public class UploadFileToServer extends AsyncTask<Void, Integer, String> {
+        final ProgressDialog pd = new ProgressDialog(Profileactivity.this);
+        @Override
+        protected void onPreExecute() {
+            // setting progress bar to zero
+            // progressBar.setProgress(0);
+            super.onPreExecute();
+            pd.show();
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+            // Making progress bar visible
+
+            pd.setMessage("Loading ...");
+
+            // updating progress bar value
+            //  progressBar.setProgress(progress[0]);
+
+            // updating percentage value
+            //  txtPercentage.setText(String.valueOf(progress[0]) + "%");
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            return uploadFile();
+        }
+
+        @SuppressWarnings("deprecation")
+        private String uploadFile() {
+            String responseString = null;
+
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost(Api_s.uploadphoto);
+
+            try {
+                AndroidMultiPartEntity entity = new AndroidMultiPartEntity(
+                        new AndroidMultiPartEntity.ProgressListener() {
+
+                            @Override
+                            public void transferred(long num) {
+                                publishProgress((int) ((num / (float) totalSize) * 100));
+                            }
+                        });
+
+                File sourceFile = new File(imgDecodableString);
+
+                // Adding file data to http body
+                entity.addPart("user_photo", new FileBody(sourceFile));
+
+                // Extra parameters if you want to pass to server
+                entity.addPart("user_id",
+                        new StringBody(prefs.getString("user_id",null)));
+
+                totalSize = entity.getContentLength();
+                httppost.setEntity(entity);
+
+                // Making server call
+                HttpResponse response = httpclient.execute(httppost);
+                HttpEntity r_entity = response.getEntity();
+
+                int statusCode = response.getStatusLine().getStatusCode();
+                if (statusCode == 200) {
+                    // Server response
+                    responseString = EntityUtils.toString(r_entity);
+                } else {
+                    responseString = "Error occurred! Http Status Code: "
+                            + statusCode;
+                }
+
+            } catch (ClientProtocolException e) {
+                responseString = e.toString();
+            } catch (IOException e) {
+                responseString = e.toString();
+            }
+
+            return responseString;
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Log.e("response", "Response from server: " + result);
+
+            // showing the server response in an alert dialog
+            //   showAlert(result);
+            pd.hide();
+            parsing_for_profile.parsing(Profileactivity.this, prefs.getString("user_id", null), fname.getText().toString().trim(), lname.getText().toString().trim(),
+                    mob.getText().toString().trim(),
+                    add1.getText().toString().trim() + " " + add11.getText().toString().trim() + " " + add111.getText().toString().trim(),
+                    add2.getText().toString().trim() + " " + add22.getText().toString().trim() + " " + add222.getText().toString().trim(),
+                    primary, email.getText().toString().trim(), sp22.getSelectedItem().toString().trim());
+            super.onPostExecute(result);
+
+        }
+
     }
 }

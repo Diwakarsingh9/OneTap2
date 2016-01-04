@@ -41,6 +41,15 @@ public class Inner_fooddetails {
     @SerializedName("favorite")
     public String favorite;
 
+    @SerializedName("restraurant_image")
+    public String restraurant_image;
+
+    @SerializedName("no_of_ret_pers")
+    public String no_of_ret_pers;
+
+    @SerializedName("rating_number")
+    public Inner_rating inner_rating = new Inner_rating();
+
     @SerializedName("add_on")
     public List<Inner_add_ons> add_on = new ArrayList<Inner_add_ons>();
 }

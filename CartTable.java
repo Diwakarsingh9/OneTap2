@@ -1,11 +1,14 @@
 package com.apporio.onetap;
 
+
 import com.orm.SugarRecord;
+
+import java.util.ArrayList;
 
 /**
  * Created by samir on 10/07/15.
  */
-public class CartTable  extends SugarRecord<CartTable> {
+public class CartTable  extends SugarRecord {
 
 
     public String ProductId ;
@@ -16,6 +19,8 @@ public class CartTable  extends SugarRecord<CartTable> {
     public String Foodimage ;
     public String Foodrating ;
     public String FoodNoOfUnits;
+    public String[] Toppingsoffood ;
+    public String[] Toppingsidoffood;
 
 
 
@@ -25,7 +30,8 @@ public class CartTable  extends SugarRecord<CartTable> {
     }
 
 
-    public CartTable(String productId, String rest_id, String food_name, String foodtype, String foodprice, String foodimage, String foodrating, String food_noOfUnits){
+    public CartTable(String productId, String rest_id, String food_name, String foodtype, String foodprice,
+                     String foodimage, String foodrating, String food_noOfUnits, String[] toppingsoffood, String[] toppingsidoffood){
         this.ProductId = productId;
         this.RestId = rest_id;
         this.Foodname = food_name;
@@ -34,6 +40,8 @@ public class CartTable  extends SugarRecord<CartTable> {
         this.Foodimage = foodimage;
         this.Foodrating = foodrating;
         this.FoodNoOfUnits = food_noOfUnits;
+        this.Toppingsoffood = toppingsoffood;
+        this.Toppingsidoffood = toppingsidoffood;
 
     }
 
@@ -106,6 +114,20 @@ public class CartTable  extends SugarRecord<CartTable> {
 
     public void setFoodNoOfUnits(String foodNoOfUnits) {
         FoodNoOfUnits = foodNoOfUnits;
+    }
+
+    public String[] getToppingsoffood() {
+        return Toppingsoffood;
+    }
+    public void setToppingsoffood(String[] toppingsoffood) {
+        Toppingsoffood = toppingsoffood;
+    }
+
+    public void setToppingsidoffood(String[]  toppingsidoffood) {
+        Toppingsidoffood = toppingsidoffood;
+    }
+    public String[] getToppingsidoffood() {
+        return Toppingsidoffood;
     }
 
 

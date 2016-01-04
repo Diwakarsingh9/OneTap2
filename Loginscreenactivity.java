@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -20,50 +21,74 @@ import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import com.facebook.login.widget.ProfilePictureView;
 import com.apporio.onetap.R;
 import com.apporio.onetap.parsing.parsing_for_settings;
 import com.apporio.onetap.parsing.parsingforlogin;
 import com.apporio.onetap.parsing.parsingforsignup;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Loginscreenactivity extends Activity {
 
-    public static TextView logintry,login,signup,register,passalert,frgtpass;
-    public static ImageView back,emailval;
+    public static TextView logintry, login, signup, register, passalert, frgtpass;
+    public static ImageView back, emailval;
     public static Spinner sp22;
     public static Loginscreenactivity log;
-    String email1;
+    String email1,emailfb, emailid;
     String emailPattern;
-    public static EditText username,password,fname,lname,mob,repass;
-    public static View v1,v2,v3,v4,v5,v7,v9,v11;
-    private static final String[] m_Codes = { "376",            "971",
-            "93",            "355",            "374",            "599",            "244",            "672",            "54",            "43",            "61",            "297",
-            "994",            "387",            "880",            "32",            "226",
-            "359",            "973",            "257",            "229",            "590",            "673",            "591",            "55",            "975",            "267",            "375",            "501",
-            "1",            "61",            "243",            "236",            "242",            "41",            "225",            "682",            "56",            "237",            "86",            "57",
-            "506",            "53",            "238",            "61",            "357",            "420",
-            "49",            "253",            "45",            "213",            "593",            "372",            "20",            "291",            "34",            "251",            "358",            "679",
-            "500",            "691",            "298",            "33",            "241",            "44",            "995",            "233",            "350",            "299",            "220",            "224",            "240",            "30",            "502",            "245",            "592",            "852",            "504",            "385",            "509",            "36",            "62",            "353",            "972",            "44",            "91",            "964",
-            "98",            "39",            "962",            "81",            "254",            "996",            "855",            "686",            "269",            "850",            "82",            "965",            "7",            "856",            "961",            "423",            "94",            "231",            "266",            "370",            "352",            "371",            "218",            "212",            "377",          "373",            "382",            "261",            "692",            "389",            "223",            "95",            "976",            "853",            "222",            "356",
-            "230",            "960",            "265",            "52",            "60",            "258",            "264",            "687",            "227",            "234",            "505",            "31",            "47",            "977",            "674",            "683",            "64",            "968",            "507",            "51",            "689",            "675",            "63",            "92",            "48",            "508",            "870",            "1",            "351",            "680",            "595",            "974",            "40",            "381",            "7",            "250",            "966",            "677",            "248",            "249",            "46",            "65",            "290",            "386",            "421",            "232",            "378",            "221",            "252",            "597",            "239",            "503",            "963",            "268",            "235",            "228",            "66",            "992",            "690",            "670",            "993",            "216",            "676",            "90",            "688",            "886",            "255",            "380",            "256",            "1",            "598",            "998",            "39",            "58",            "84",            "678",            "681",            "685",            "967",            "262",            "27",            "260",     "263"};
+    private ProfileTracker mProfileTracker;
+    CallbackManager callbackManager;
+    public static LoginButton fbbutton;
+    public static EditText username, password, fname, lname, mob, repass;
+    public static View v1, v2, v3, v4, v5, v7, v9, v11;
+    private static final String[] m_Codes = {"376", "971",
+            "93", "355", "374", "599", "244", "672", "54", "43", "61", "297",
+            "994", "387", "880", "32", "226",
+            "359", "973", "257", "229", "590", "673", "591", "55", "975", "267", "375", "501",
+            "1", "61", "243", "236", "242", "41", "225", "682", "56", "237", "86", "57",
+            "506", "53", "238", "61", "357", "420",
+            "49", "253", "45", "213", "593", "372", "20", "291", "34", "251", "358", "679",
+            "500", "691", "298", "33", "241", "44", "995", "233", "350", "299", "220", "224", "240", "30", "502", "245", "592", "852", "504", "385", "509", "36", "62", "353", "972", "44", "91", "964",
+            "98", "39", "962", "81", "254", "996", "855", "686", "269", "850", "82", "965", "7", "856", "961", "423", "94", "231", "266", "370", "352", "371", "218", "212", "377", "373", "382", "261", "692", "389", "223", "95", "976", "853", "222", "356",
+            "230", "960", "265", "52", "60", "258", "264", "687", "227", "234", "505", "31", "47", "977", "674", "683", "64", "968", "507", "51", "689", "675", "63", "92", "48", "508", "870", "1", "351", "680", "595", "974", "40", "381", "7", "250", "966", "677", "248", "249", "46", "65", "290", "386", "421", "232", "378", "221", "252", "597", "239", "503", "963", "268", "235", "228", "66", "992", "690", "670", "993", "216", "676", "90", "688", "886", "255", "380", "256", "1", "598", "998", "39", "58", "84", "678", "681", "685", "967", "262", "27", "260", "263"};
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setStatusBarColor();
+        FacebookSdk.sdkInitialize(getApplicationContext());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loginscreenactivity);
         ViewFlipper flipper = (ViewFlipper) findViewById(R.id.flipper1);
         flipper.startFlipping();
         ViewFlipper flipper1 = (ViewFlipper) findViewById(R.id.flipper2);
         flipper1.startFlipping();
-        log=Loginscreenactivity.this;
+        log = Loginscreenactivity.this;
+        callbackManager = CallbackManager.Factory.create();
         logintry = (TextView) findViewById(R.id.login22);
         register = (TextView) findViewById(R.id.register);
+        fbbutton = (LoginButton) findViewById(R.id.login_button);
+        fbbutton.setReadPermissions("public_profile email");
         logintry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -97,7 +122,42 @@ public class Loginscreenactivity extends Activity {
 
             }
         });
+        fbbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Handler handler12 = new Handler();
+                handler12.postDelayed(new Runnable() {
+
+                    @Override
+                    public void run()
+
+                    {
+                    }
+                }, 1000);
+
+            }
+        });
+        fbbutton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+
+                if (AccessToken.getCurrentAccessToken() != null) {
+                    RequestData();
+                }
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+            }
+        });
     }
+
+
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void setStatusBarColor(){
@@ -153,11 +213,10 @@ public class Loginscreenactivity extends Activity {
         password.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if(hasFocus==true){
+                if (hasFocus == true) {
                     v3.setVisibility(View.GONE);
                     v4.setVisibility(View.VISIBLE);
-                }
-                else{
+                } else {
                     v3.setVisibility(View.VISIBLE);
                     v4.setVisibility(View.GONE);
                 }
@@ -400,5 +459,68 @@ public class Loginscreenactivity extends Activity {
         });
 
         dialog.show();
+    }
+
+    public void RequestData(){
+        GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject object,GraphResponse response) {
+
+                 JSONObject json = response.getJSONObject();
+                try {
+                    if(json != null){
+                        Log.e("name", json.getString("name"));
+
+                        Log.e("email", json.getString("email"));
+                        Log.e("link", json.getString("link"));
+                        Log.e("id", json.getString("id"));
+                        emailfb=json.getString("email");
+                        emailid=json.getString("id");
+                        if(Profile.getCurrentProfile() == null) {
+                            mProfileTracker = new ProfileTracker() {
+                                @Override
+                                protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
+                                    Log.e("facebook - profile", profile2.getFirstName());
+                                    mProfileTracker.stopTracking();
+                                    parsingforlogin.facebookparsing(Loginscreenactivity.this, profile2.getFirstName(), profile2.getLastName(),
+                                            emailfb,emailid, "");
+                                }
+                            };
+                            mProfileTracker.startTracking();
+                        }
+                        else {
+                            Profile profile = Profile.getCurrentProfile();
+                            Log.e("facebook - profile22", profile.getFirstName());
+                            parsingforlogin.facebookparsing(Loginscreenactivity.this, profile.getFirstName(), profile.getLastName(),
+                                    emailfb, emailid, "");
+                        }
+
+
+//                        Profile profile1 = Profile.getCurrentProfile();
+//                       Log.e("firstname", "" + profile1.getFirstName());
+//                        Log.e("lastname", "" + profile1.getLastName());
+//                        Log.e("profile image", "" + profile1.getProfilePictureUri(40, 40));
+//                        Log.e("profill",""+profile1);
+//                        parsingforlogin.facebookparsing(Loginscreenactivity.this,profile1.getFirstName(),profile1.getLastName(),
+//                                json.getString("email"), json.getString("id"),"");
+                    }
+
+                } catch (Exception e) {
+                    Log.e("exception", ""+e);
+                    e.printStackTrace();
+                }
+            }
+        });
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,link,email,picture");
+        request.setParameters(parameters);
+        request.executeAsync();
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 }
