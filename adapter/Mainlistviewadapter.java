@@ -215,6 +215,7 @@ public class Mainlistviewadapter extends BaseAdapter {
         viewHolder.ratingBar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 int pos= (int) v.getTag();
                 Intent in = new Intent(ctc, Foodinneractivity.class);
                 in.putExtra("product_id",product_id.get(pos));
